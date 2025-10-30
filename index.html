@@ -839,7 +839,7 @@
             const startTime = performance.now();
 
             try {
-                const response = await fetch('http://localhost:8001/evaluate', {
+                const response = await fetch('/evaluate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -870,7 +870,7 @@
 
             } catch (error) {
                 status.textContent = `Error: ${error.message}`;
-                container.innerHTML = `<div class="empty-state">Error connecting to MEDEVAC API<br><br>Ensure the API is running at http://localhost:8001<br>Run: python3 medevai_api.py</div>`;
+                container.innerHTML = `<div class="empty-state">Error connecting to MEDEVAC API<br><br>Ensure the API is running at <br>Run: python3 medevai_api.py</div>`;
                 console.error(error);
             } finally {
                 // Hide loading indicators
