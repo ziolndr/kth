@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMIN | KTH Field Hospital Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --black: #000000;
+            --dark: #0a0a0a;
+            --border: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --accent: #00ff41;
+            --accent-dim: rgba(0, 255, 65, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--black);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Header */
+        .header {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--text-primary);
+            margin-bottom: 40px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: baseline;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .header-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 500px 1fr 400px;
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        /* Left Column - Scenario Input */
+        .scenario-panel {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            padding: 30px;
+            height: fit-content;
+        }
+
+        .panel-header {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .stepper-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stepper-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .stepper-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-secondary);
+        }
+
+        .stepper-value {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 8px;
+            background: var(--black);
+            border: 1px solid var(--border);
+        }
+
+        .range-input {
+            width: 100%;
+            height: 2px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--border);
+            outline: none;
+            margin-top: 8px;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .range-input::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--text-primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        .range-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .probability-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .probability-value {
+            flex: 1;
+            background: var(--black);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .scenario-presets {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preset-btn {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'IBM Plex Mono', monospace;
+            text-align: left;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .preset-label {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .preset-desc {
+            font-size: 8px;
+            color: var(--text-muted);
+        }
+
+        .auto-compute-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+            padding: 12px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+
+        .loading-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: loadingPulse 1.4s ease-in-out infinite;
+        }
+
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes loadingPulse {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(1); }
+            40% { opacity: 1; transform: scale(1.3); }
+        }
+
+        /* Center Column - Recommendations */
+        .recommendations-panel {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            padding: 30px;
+        }
+
+        .recommendation-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .recommendation-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .recommendation-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--text-secondary);
+        }
+
+        .recommendation-card.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .recommendation-card.rank-1 {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-rank {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .recommendation-card.rank-1 .recommendation-rank {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .recommendation-score {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .recommendation-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Right Column - Detail View */
+        .detail-panel {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            padding: 30px;
+            height: fit-content;
+        }
+
+        .detail-content {
+            display: none;
+        }
+
+        .detail-content.visible {
+            display: block;
+        }
+
+        .detail-score-display {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .detail-score-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .detail-score-value {
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 16px;
+        }
+
+        .detail-score-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            margin-top: 16px;
+        }
+
+        .detail-score-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .detail-strategy {
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 32px;
+            color: var(--text-secondary);
+        }
+
+        .strategy-metrics {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .processing-indicator {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">OMIN</div>
+                <div class="header-title">FIELD HOSPITAL SIMULATOR</div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>KTH AI SOCIETY</span>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Left Column: Scenario Input -->
+            <div class="scenario-panel">
+                <div class="panel-header">Scenario Parameters</div>
+
+                <!-- Preset Scenarios -->
+                <div class="scenario-presets">
+                    <button class="preset-btn" onclick="loadPreset('march')">
+                        <div class="preset-label">Standard MARCH</div>
+                        <div class="preset-desc">MARCH wins (0.756 coherence)</div>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('golden')">
+                        <div class="preset-label">Golden Hour</div>
+                        <div class="preset-desc">Close scores (0.636 vs 0.618)</div>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('prolonged')">
+                        <div class="preset-label">Prolonged Care</div>
+                        <div class="preset-desc">MARCH vs Prolonged Field Care</div>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('mass_casualty')">
+                        <div class="preset-label">Mass Casualty</div>
+                        <div class="preset-desc">MARCH vs Prolonged (0.764 vs 0.761)</div>
+                    </button>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Critical Patients (Immediate Surgery)</label>
+                    <div class="stepper-input">
+                        <button class="stepper-btn" onclick="adjustValue('critical', -1)">−</button>
+                        <div class="stepper-value" id="critical-value">3</div>
+                        <button class="stepper-btn" onclick="adjustValue('critical', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Urgent Patients (Surgery within 4h)</label>
+                    <div class="stepper-input">
+                        <button class="stepper-btn" onclick="adjustValue('urgent', -1)">−</button>
+                        <div class="stepper-value" id="urgent-value">8</div>
+                        <button class="stepper-btn" onclick="adjustValue('urgent', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Delayed Patients (Stable)</label>
+                    <div class="stepper-input">
+                        <button class="stepper-btn" onclick="adjustValue('delayed', -1)">−</button>
+                        <div class="stepper-value" id="delayed-value">12</div>
+                        <button class="stepper-btn" onclick="adjustValue('delayed', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Surgical Supplies Capacity: <span id="supplies-display">35%</span></label>
+                    <input type="range" class="range-input" id="supplies-range" min="10" max="100" value="35" oninput="updateRange('supplies')">
+                    <div class="range-label">
+                        <span>10%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Blood Units Available</label>
+                    <div class="stepper-input">
+                        <button class="stepper-btn" onclick="adjustValue('blood', -5)">−</button>
+                        <div class="stepper-value" id="blood-value">40</div>
+                        <button class="stepper-btn" onclick="adjustValue('blood', 5)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Resupply Delay: <span id="resupply-display">4-6 hours</span></label>
+                    <input type="range" class="range-input" id="resupply-range" min="2" max="12" value="5" step="0.5" oninput="updateRange('resupply')">
+                    <div class="range-label">
+                        <span>2h</span>
+                        <span>12h</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Resupply Arrival Probability: <span id="probability-display">60%</span></label>
+                    <input type="range" class="range-input" id="probability-range" min="0" max="100" value="60" oninput="updateRange('probability')">
+                    <div class="range-label">
+                        <span>0%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Expected Casualty Surge: <span id="surge-display">15-20 patients</span></label>
+                    <input type="range" class="range-input" id="surge-range" min="0" max="50" value="17" oninput="updateRange('surge')">
+                    <div class="range-label">
+                        <span>0</span>
+                        <span>50+</span>
+                    </div>
+                </div>
+
+                <div class="auto-compute-indicator">
+                    <div class="loading-dot" style="display: none;"></div>
+                    <div class="loading-dot" style="display: none;"></div>
+                    <div class="loading-dot" style="display: none;"></div>
+                    <span id="processing-status">Auto-updating on parameter change</span>
+                </div>
+            </div>
+
+            <!-- Center Column: Recommendations -->
+            <div class="recommendations-panel">
+                <div class="panel-header">Ranked Strategies</div>
+                <div id="recommendations-container">
+                    <div class="empty-state">
+                        Adjust scenario parameters to see ranked allocation strategies
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Detail View -->
+            <div class="detail-panel">
+                <div class="panel-header">Strategy Detail</div>
+                <div class="empty-state" id="detail-empty">
+                    Select a strategy to view details
+                </div>
+                <div class="detail-content" id="detail-content">
+                    <div class="detail-score-display">
+                        <div class="detail-score-label">Coherence Score</div>
+                        <div class="detail-score-value" id="detail-score">0.000</div>
+                        <div class="detail-score-bar">
+                            <div class="detail-score-bar-fill" id="detail-bar"></div>
+                        </div>
+                    </div>
+                    <div class="detail-strategy" id="detail-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div>OMIN Defense Systems | KTH AI Society Partnership</div>
+            <div>Signal: 619-971-9551 | founder@traut.ai</div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        const state = {
+            critical: 3,
+            urgent: 8,
+            delayed: 12,
+            supplies: 35,
+            blood: 40,
+            resupply: 5,
+            probability: 60,
+            surge: 17,
+            results: null,
+            selectedIndex: null
+        };
+
+        // Debounce timer
+        let debounceTimer = null;
+        const DEBOUNCE_DELAY = 600; // ms
+
+        // Preset scenarios - tuned for v2 doctrine service
+        const presets = {
+            march: {
+                critical: 3,
+                urgent: 5,
+                delayed: 4,
+                supplies: 30,
+                blood: 25,
+                resupply: 5,
+                probability: 60,
+                surge: 10,
+                expected: "MARCH Protocol"
+            },
+            golden: {
+                critical: 2,
+                urgent: 3,
+                delayed: 5,
+                supplies: 40,
+                blood: 30,
+                resupply: 1.5,
+                probability: 90,
+                surge: 5,
+                expected: "Golden Hour (close to MARCH)"
+            },
+            prolonged: {
+                critical: 4,
+                urgent: 6,
+                delayed: 8,
+                supplies: 35,
+                blood: 40,
+                resupply: 10,
+                probability: 40,
+                surge: 12,
+                expected: "MARCH vs Prolonged (close)"
+            },
+            mass_casualty: {
+                critical: 10,
+                urgent: 15,
+                delayed: 20,
+                supplies: 20,
+                blood: 15,
+                resupply: 8,
+                probability: 30,
+                surge: 40,
+                expected: "Preserve for Critical or Mass Casualty"
+            }
+        };
+
+        // Load preset scenario
+        function loadPreset(presetName) {
+            const preset = presets[presetName];
+            if (!preset) return;
+
+            // Update all state values
+            state.critical = preset.critical;
+            state.urgent = preset.urgent;
+            state.delayed = preset.delayed;
+            state.supplies = preset.supplies;
+            state.blood = preset.blood;
+            state.resupply = preset.resupply;
+            state.probability = preset.probability;
+            state.surge = preset.surge;
+
+            // Update UI
+            document.getElementById('critical-value').textContent = preset.critical;
+            document.getElementById('urgent-value').textContent = preset.urgent;
+            document.getElementById('delayed-value').textContent = preset.delayed;
+            document.getElementById('blood-value').textContent = preset.blood;
+
+            document.getElementById('supplies-range').value = preset.supplies;
+            document.getElementById('supplies-display').textContent = `${preset.supplies}%`;
+
+            document.getElementById('resupply-range').value = preset.resupply;
+            document.getElementById('resupply-display').textContent = `${preset.resupply.toFixed(1)} hours`;
+
+            document.getElementById('probability-range').value = preset.probability;
+            document.getElementById('probability-display').textContent = `${preset.probability}%`;
+
+            document.getElementById('surge-range').value = preset.surge;
+            document.getElementById('surge-display').textContent = preset.surge === 50 ? '50+ patients' : `${preset.surge} patients`;
+
+            // Trigger computation
+            computeRecommendations();
+        }
+
+        // Debounced compute function
+        function debouncedCompute() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                computeRecommendations();
+            }, DEBOUNCE_DELAY);
+        }
+
+        // Value adjustment
+        function adjustValue(key, delta) {
+            const minValues = { critical: 0, urgent: 0, delayed: 0, blood: 0 };
+            const maxValues = { critical: 20, urgent: 30, delayed: 50, blood: 200 };
+
+            state[key] = Math.max(minValues[key], Math.min(maxValues[key], state[key] + delta));
+            document.getElementById(`${key}-value`).textContent = state[key];
+
+            // Trigger auto-compute
+            debouncedCompute();
+        }
+
+        // Range update
+        function updateRange(key) {
+            const value = parseFloat(document.getElementById(`${key}-range`).value);
+            state[key] = value;
+
+            if (key === 'supplies') {
+                document.getElementById('supplies-display').textContent = `${value}%`;
+            } else if (key === 'resupply') {
+                const hours = value.toFixed(1);
+                document.getElementById('resupply-display').textContent = `${hours} hours`;
+            } else if (key === 'probability') {
+                document.getElementById('probability-display').textContent = `${value}%`;
+            } else if (key === 'surge') {
+                document.getElementById('surge-display').textContent = value === 50 ? '50+ patients' : `${value} patients`;
+            }
+
+            // Trigger auto-compute
+            debouncedCompute();
+        }
+
+        // Generate API request payload from current state
+        function generateAPIRequest() {
+            // Calculate equipment inventory using real medical equipment names
+            const baseInventory = {
+                tourniquet: 30,
+                hemostatic_gauze: 50,
+                chest_seal: 20,
+                needle_decompression: 15,
+                nasopharyngeal_airway: 15,
+                pressure_bandage: 60,
+                iv_fluid_1L: 80,
+                morphine_dose: 100,
+                antibiotics_broad_spectrum: 40,
+                tranexamic_acid: 20,
+                ventilator: 3,
+                surgical_pack_trauma: 10,
+                pulse_oximeter: 10
+            };
+
+            // Scale inventory by supplies slider
+            const equipment_inventory = {};
+            for (const [name, base] of Object.entries(baseInventory)) {
+                equipment_inventory[name] = Math.round(base * (state.supplies / 100));
+            }
+
+            // Blood units scale separately
+            equipment_inventory['blood_unit_O_neg'] = state.blood;
+
+            // Determine capabilities based on scenario
+            const medevac_available = state.resupply < 4; // Fast resupply suggests medevac
+            const surgical_capability = state.resupply < 8; // Surgical if moderate delay
+
+            return {
+                casualties: [
+                    { severity: "critical", count: state.critical },
+                    { severity: "urgent", count: state.urgent },
+                    { severity: "delayed", count: state.delayed }
+                ],
+                equipment_inventory: equipment_inventory,
+                hours_until_resupply: state.resupply,
+                expected_incoming_casualties: state.surge,
+                medevac_available: medevac_available,
+                surgical_capability: surgical_capability
+            };
+        }
+
+        // Compute recommendations
+        async function computeRecommendations() {
+            const status = document.getElementById('processing-status');
+            const container = document.getElementById('recommendations-container');
+            const loadingDots = document.querySelectorAll('.loading-dot');
+
+            // Show loading indicators
+            loadingDots.forEach(dot => dot.style.display = 'block');
+            status.textContent = 'Computing coherence...';
+            container.innerHTML = '<div class="empty-state">Analyzing scenario...</div>';
+
+            const apiRequest = generateAPIRequest();
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch('http://localhost:8001/evaluate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(apiRequest)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const strategies = await response.json();
+                const processingTime = ((performance.now() - startTime) / 1000).toFixed(3);
+
+                // Convert medevai API format to display format
+                state.results = strategies.map(s => ({
+                    text: s.description,
+                    score: s.coherence_score,
+                    name: s.name,
+                    rationale: s.rationale,
+                    survival_rate: s.estimated_survival_rate,
+                    cost: s.total_cost
+                }));
+
+                displayRecommendations(processingTime);
+
+                status.textContent = `Updated ${processingTime}s ago`;
+
+            } catch (error) {
+                status.textContent = `Error: ${error.message}`;
+                container.innerHTML = `<div class="empty-state">Error connecting to MEDEVAC API<br><br>Ensure the API is running at http://localhost:8001<br>Run: python3 medevai_api.py</div>`;
+                console.error(error);
+            } finally {
+                // Hide loading indicators
+                loadingDots.forEach(dot => dot.style.display = 'none');
+            }
+        }
+
+        // Display recommendations
+        function displayRecommendations(processingTime) {
+            const container = document.getElementById('recommendations-container');
+
+            if (!state.results || state.results.length === 0) {
+                container.innerHTML = '<div class="empty-state">No results</div>';
+                return;
+            }
+
+            let html = '';
+            state.results.forEach((result, index) => {
+                const rankClass = index === 0 ? 'rank-1' : '';
+                const rankLabel = index === 0 ? 'HIGHEST COHERENCE' : `RANK ${index + 1}`;
+
+                html += `
+                    <div class="recommendation-card ${rankClass}" onclick="selectRecommendation(${index})">
+                        <div class="recommendation-header">
+                            <span class="recommendation-rank">${rankLabel}</span>
+                            <span class="recommendation-score">${result.score.toFixed(3)}</span>
+                        </div>
+                        <div class="recommendation-text" style="font-weight: 600; margin-bottom: 8px;">${result.name}</div>
+                        <div class="recommendation-text">${result.text}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Animate cards
+            setTimeout(() => {
+                document.querySelectorAll('.recommendation-card').forEach((card, i) => {
+                    setTimeout(() => {
+                        card.classList.add('visible');
+                    }, i * 100);
+                });
+            }, 50);
+
+            // Auto-select first recommendation
+            setTimeout(() => selectRecommendation(0), 500);
+        }
+
+        // Select recommendation
+        function selectRecommendation(index) {
+            state.selectedIndex = index;
+
+            // Update card selection
+            document.querySelectorAll('.recommendation-card').forEach((card, i) => {
+                card.classList.toggle('selected', i === index);
+            });
+
+            // Show detail panel
+            const result = state.results[index];
+            document.getElementById('detail-empty').style.display = 'none';
+            document.getElementById('detail-content').classList.add('visible');
+            document.getElementById('detail-score').textContent = result.score.toFixed(3);
+
+            // Build detailed text with all metadata
+            let detailHTML = `<div style="font-weight: 600; font-size: 16px; margin-bottom: 12px;">${result.name}</div>`;
+            detailHTML += `<div style="margin-bottom: 16px;">${result.text}</div>`;
+            detailHTML += `<div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">${result.rationale}</div>`;
+            detailHTML += '<div class="strategy-metrics">';
+            detailHTML += `<div class="metric-row"><span class="metric-label">Survival Rate</span><span class="metric-value">${(result.survival_rate * 100).toFixed(1)}%</span></div>`;
+            detailHTML += `<div class="metric-row"><span class="metric-label">Cost Estimate</span><span class="metric-value">$${result.cost.toLocaleString()}</span></div>`;
+            detailHTML += '</div>';
+
+            document.getElementById('detail-text').innerHTML = detailHTML;
+
+            // Animate progress bar
+            setTimeout(() => {
+                document.getElementById('detail-bar').style.width = `${result.score * 100}%`;
+            }, 100);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Trigger initial computation after a short delay
+            setTimeout(() => {
+                computeRecommendations();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
