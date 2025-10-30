@@ -5,6 +5,7 @@ FastAPI wrapper for real combat medical protocols
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import httpx
@@ -31,6 +32,11 @@ app.add_middleware(
 # Initialize doctrine service
 doctrine_service = FieldHospitalDoctrine()
 
+@app.get("/")
+def serve_frontend():
+    """Serve the KTH field hospital simulator interface"""
+    return FileResponse("index.html")
+    
 # Request/Response models
 class CasualtyInput(BaseModel):
     severity: str  # "critical", "urgent", "delayed", "minimal"
